@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScoutInput",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "enum": ["statistical_physics", "neuroscience", "ecology", "information_theory"],
+      "description": "Target non-ML scientific domain to search"
+    },
+    "domain_keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Domain-specific search keywords"
+    },
+    "min_papers": {
+      "type": "integer",
+      "minimum": 3,
+      "default": 5,
+      "description": "Minimum number of papers to return"
+    },
+    "min_novelty_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 6,
+      "description": "Minimum novelty score threshold"
+    }
+  },
+  "required": ["domain", "domain_keywords"]
+}

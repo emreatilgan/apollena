@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BenchmarkerInput",
+  "type": "object",
+  "properties": {
+    "model_name": { "type": "string" },
+    "model_file": { "type": "string" },
+    "fuxictr_path": {
+      "type": "string",
+      "default": "/workspace/FuxiCTR"
+    },
+    "dataset": {
+      "type": "string",
+      "default": "Criteo_x1"
+    },
+    "hyperparams": {
+      "type": "object",
+      "properties": {
+        "embedding_dim": { "type": "integer", "default": 16 },
+        "learning_rate": { "type": "number", "default": 0.001 },
+        "batch_size": { "type": "integer", "default": 4096 },
+        "epochs": { "type": "integer", "default": 10 },
+        "early_stopping_patience": { "type": "integer", "default": 2 }
+      }
+    }
+  },
+  "required": ["model_name", "model_file"]
+}

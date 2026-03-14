@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EngineerInput",
+  "type": "object",
+  "properties": {
+    "model_name": { "type": "string" },
+    "hypothesis": {
+      "type": "object",
+      "description": "Full hypothesis object from Theorist output"
+    },
+    "fuxictr_path": {
+      "type": "string",
+      "default": "/workspace/FuxiCTR",
+      "description": "Path to FuxiCTR installation"
+    },
+    "template_model": {
+      "type": "string",
+      "default": "DeepFM",
+      "description": "Existing BARS model to use as structural template"
+    }
+  },
+  "required": ["model_name", "hypothesis"]
+}

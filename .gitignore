@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+sessions.json
+scout_output.json
+hypothesis.json
+results/*.json
+.claude/

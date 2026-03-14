@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EngineerOutput",
+  "type": "object",
+  "properties": {
+    "model_name": { "type": "string" },
+    "model_file": { "type": "string" },
+    "test_file": { "type": "string" },
+    "layer_file": { "type": ["string", "null"] },
+    "test_passed": { "type": "boolean" },
+    "test_output": { "type": "string" },
+    "files_modified": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["model_name", "model_file", "test_file", "test_passed", "test_output", "files_modified"]
+}

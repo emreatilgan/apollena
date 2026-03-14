@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TheoristInput",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Source scientific domain"
+    },
+    "papers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "mechanism_summary": { "type": "string" },
+          "ctr_analogy": { "type": "string" },
+          "novelty_score": { "type": "number" }
+        },
+        "required": ["title", "mechanism_summary", "ctr_analogy", "novelty_score"]
+      },
+      "description": "Papers from Scout output"
+    },
+    "bars_model_list": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of existing BARS model names to avoid"
+    }
+  },
+  "required": ["domain", "papers", "bars_model_list"]
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TheoristOutput",
+  "type": "object",
+  "properties": {
+    "model_name": { "type": "string" },
+    "source_domain": { "type": "string" },
+    "source_mechanism": { "type": "string" },
+    "mechanism_description": { "type": "string" },
+    "ctr_mapping": { "type": "string" },
+    "architecture": {
+      "type": "object",
+      "properties": {
+        "new_layer": { "type": "string" },
+        "layer_math": { "type": "string" },
+        "forward_pass": { "type": "string" },
+        "integration": { "type": "string" }
+      },
+      "required": ["new_layer", "layer_math", "forward_pass", "integration"]
+    },
+    "differentiability_proof": { "type": "string" },
+    "novelty_argument": { "type": "string" },
+    "expected_advantage": { "type": "string" },
+    "reference_papers": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["model_name", "source_domain", "source_mechanism", "mechanism_description", "ctr_mapping", "architecture", "differentiability_proof", "novelty_argument", "expected_advantage", "reference_papers"]
+}
