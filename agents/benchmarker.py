@@ -12,7 +12,7 @@ PROMPT_FILE = PROJECT_ROOT / "prompts" / "benchmarker_prompt.md"
 RESULTS_DIR = PROJECT_ROOT / "results"
 OUTPUT_FILE = RESULTS_DIR / "benchmark_result.json"
 CONFIGS_DIR = PROJECT_ROOT / "configs"
-FUXICTR_PATH = "/workspace/FuxiCTR"
+FUXICTR_PATH = str(Path.home() / "Projects" / "FuxiCTR")
 
 ALLOWED_TOOLS = ["Read", "Write", "Edit", "Bash"]
 PERMISSION_MODE = "bypassPermissions"
@@ -22,7 +22,7 @@ MAX_BUDGET_USD = 1.00
 
 async def run_benchmarker(model_name: str, model_file: str) -> dict:
     """Run the Benchmarker agent. Returns the parsed benchmark result dict."""
-    system_prompt = PROMPT_FILE.read_text()
+    system_prompt = PROMPT_FILE.read_text().replace("{{FUXICTR_PATH}}", FUXICTR_PATH)
 
     task_prompt = (
         f"Benchmark the following model on Criteo_x1:\n\n"

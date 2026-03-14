@@ -6,8 +6,8 @@ Given a model name and its file path, run a full training and evaluation cycle o
 
 ## Benchmark Protocol
 
-1. **Read the model config template**: Read an existing BARS config for reference (e.g., `/workspace/FuxiCTR/configs/`)
-2. **Create experiment config**: Write a YAML config file for the new model at the project's `configs/` directory. Use standard Criteo_x1 settings:
+1. **Read the model config template**: Read the config from the model's zoo entry at `{{FUXICTR_PATH}}/model_zoo/{ModelName}/{ModelName}_torch/config/model_config.yaml`
+2. **Create experiment config**: Write a YAML config file for the new model with standard Criteo_x1 settings:
    - Dataset: Criteo_x1
    - Embedding dim: 16
    - Learning rate: 1e-3
@@ -15,7 +15,7 @@ Given a model name and its file path, run a full training and evaluation cycle o
    - Epochs: 10
    - Early stopping patience: 2
    - Optimizer: Adam
-3. **Run training**: Execute `cd /workspace/FuxiCTR && python run_expid.py --config <config_path> --expid <model_name>_criteo_x1`
+3. **Run training**: Execute `cd {{FUXICTR_PATH}}/model_zoo/{ModelName}/{ModelName}_torch && python run_expid.py --config config/model_config.yaml --expid {ModelName}_criteo_x1`
 4. **Capture metrics**: Extract AUC and logloss from the training output
 5. **Write results**: Save to `results/benchmark_result.json`
 

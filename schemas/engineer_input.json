@@ -10,7 +10,7 @@
     },
     "fuxictr_path": {
       "type": "string",
-      "default": "/workspace/FuxiCTR",
+      "default": "~/Projects/FuxiCTR",
       "description": "Path to FuxiCTR installation"
     },
     "template_model": {

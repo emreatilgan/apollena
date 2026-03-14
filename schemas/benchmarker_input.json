@@ -7,7 +7,7 @@
     "model_file": { "type": "string" },
     "fuxictr_path": {
       "type": "string",
-      "default": "/workspace/FuxiCTR"
+      "default": "~/Projects/FuxiCTR"
     },
     "dataset": {
       "type": "string",

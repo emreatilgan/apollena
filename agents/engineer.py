@@ -8,7 +8,7 @@ from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage, SystemMes
 # --- Constants ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROMPT_FILE = PROJECT_ROOT / "prompts" / "engineer_prompt.md"
-FUXICTR_PATH = "/workspace/FuxiCTR"
+FUXICTR_PATH = str(Path.home() / "Projects" / "FuxiCTR")
 
 ALLOWED_TOOLS = ["Read", "Edit", "Write", "Bash", "Glob", "Grep"]
 PERMISSION_MODE = "bypassPermissions"
@@ -18,7 +18,7 @@ MAX_BUDGET_USD = 2.00
 
 async def run_engineer(hypothesis: dict) -> dict:
     """Run the Engineer agent with the Theorist's hypothesis. Returns a summary dict."""
-    system_prompt = PROMPT_FILE.read_text()
+    system_prompt = PROMPT_FILE.read_text().replace("{{FUXICTR_PATH}}", FUXICTR_PATH)
     model_name = hypothesis["model_name"]
 
     task_prompt = (
@@ -27,10 +27,10 @@ async def run_engineer(hypothesis: dict) -> dict:
         f"**Full Hypothesis**:\n"
         f"```json\n{json.dumps(hypothesis, indent=2)}\n```\n\n"
         f"**FuxiCTR Path**: `{FUXICTR_PATH}`\n"
-        f"**Template Model**: Read `{FUXICTR_PATH}/fuxictr/models/DeepFM.py` as a structural template.\n\n"
+        f"**Template Model**: Read `{FUXICTR_PATH}/model_zoo/DeepFM/DeepFM_torch/src/DeepFM.py` as a structural template.\n\n"
         f"After implementation, run:\n"
         f"```bash\n"
-        f"cd {FUXICTR_PATH} && python -m pytest tests/test_{model_name}.py -v\n"
+        f"cd {FUXICTR_PATH} && python -m pytest tests/unit_tests/test_{model_name}.py -v\n"
         f"```\n\n"
         f"Follow the instructions in your system prompt exactly."
     )
@@ -62,8 +62,8 @@ async def run_engineer(hypothesis: dict) -> dict:
 
 def _parse_engineer_result(model_name: str, result_text: str | None) -> dict:
     """Extract structured info from Engineer's result text."""
-    model_file = f"{FUXICTR_PATH}/fuxictr/models/{model_name}.py"
-    test_file = f"{FUXICTR_PATH}/tests/test_{model_name}.py"
+    model_file = f"{FUXICTR_PATH}/model_zoo/{model_name}/{model_name}_torch/src/{model_name}.py"
+    test_file = f"{FUXICTR_PATH}/tests/unit_tests/test_{model_name}.py"
 
     # Check if files actually exist
     model_exists = Path(model_file).exists()

@@ -34,7 +34,7 @@ apollena/
 └── requirements.txt
 ```
 
-FuxiCTR workspace lives at `/workspace/FuxiCTR/` (outside this repo).
+FuxiCTR workspace lives at `~/Projects/FuxiCTR/` (outside this repo).
 
 ---
 
@@ -121,7 +121,7 @@ When the Engineer implements a new model:
 4. Register the new class in `fuxictr/models/__init__.py`
 5. New layer goes in `fuxictr/layers/` if it's reusable; inline otherwise
 6. Test file: `tests/test_{ModelName}.py` — must test forward pass shape, finite loss, no NaN gradients
-7. Test command: `cd /workspace/FuxiCTR && python -m pytest tests/test_{ModelName}.py`
+7. Test command: `cd ~/Projects/FuxiCTR && python -m pytest tests/test_{ModelName}.py`
 8. On test failure: read error, patch, re-run — loop up to 10 times before escalating to Orchestrator
 
 ---
