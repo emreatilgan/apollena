@@ -170,7 +170,8 @@ async def run_stage_benchmarker(sessions: dict) -> bool:
     log.info("=== STAGE 4: BENCHMARKER ===")
 
     hypothesis = json.loads(HYPOTHESIS_FILE.read_text())
-    model_name = hypothesis["model_name"]
+    raw_name = hypothesis["model_name"]
+    model_name = raw_name.split("(")[0].split(" —")[0].split(" -")[0].strip()
 
     engineer_output = sessions["stages"]["engineer"].get("output", {})
     model_file = engineer_output.get("model_file", "")

@@ -37,14 +37,15 @@ async def run_theorist(scout_output: dict) -> dict:
     system_prompt = PROMPT_FILE.read_text()
 
     # Build context for the Theorist: papers + BARS model list
+    domain = scout_output.get("domain") or scout_output.get("target_domain", "unknown")
     theorist_context = {
-        "domain": scout_output["domain"],
+        "domain": domain,
         "papers": scout_output["papers"],
         "bars_model_list": BARS_MODEL_LIST,
     }
 
     task_prompt = (
-        f"Here is the Scout's output with papers from the **{scout_output['domain']}** domain:\n\n"
+        f"Here is the Scout's output with papers from the **{domain}** domain:\n\n"
         f"```json\n{json.dumps(theorist_context, indent=2)}\n```\n\n"
         f"Write your hypothesis to: `{OUTPUT_FILE}`\n\n"
         f"Follow the instructions in your system prompt exactly. Think deeply — you have extended thinking enabled."

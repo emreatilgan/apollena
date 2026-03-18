@@ -16,10 +16,15 @@ MAX_TURNS = 30
 MAX_BUDGET_USD = 2.00
 
 
+def _extract_short_name(raw_name: str) -> str:
+    """Extract the short model identifier from a name like 'TAPNet (Thouless-Anderson-Palmer Network)'."""
+    return raw_name.split("(")[0].split(" —")[0].split(" -")[0].strip()
+
+
 async def run_engineer(hypothesis: dict) -> dict:
     """Run the Engineer agent with the Theorist's hypothesis. Returns a summary dict."""
     system_prompt = PROMPT_FILE.read_text().replace("{{FUXICTR_PATH}}", FUXICTR_PATH)
-    model_name = hypothesis["model_name"]
+    model_name = _extract_short_name(hypothesis["model_name"])
 
     task_prompt = (
         f"Implement the following hypothesis as a FuxiCTR model.\n\n"
@@ -45,7 +50,6 @@ async def run_engineer(hypothesis: dict) -> dict:
             system_prompt=system_prompt,
             allowed_tools=ALLOWED_TOOLS,
             permission_mode=PERMISSION_MODE,
-            allow_dangerously_skip_permissions=True,
             max_turns=MAX_TURNS,
             max_budget_usd=MAX_BUDGET_USD,
         ),

@@ -16,8 +16,8 @@ FUXICTR_PATH = str(Path.home() / "Projects" / "FuxiCTR")
 
 ALLOWED_TOOLS = ["Read", "Write", "Edit", "Bash"]
 PERMISSION_MODE = "bypassPermissions"
-MAX_TURNS = 15
-MAX_BUDGET_USD = 1.00
+MAX_TURNS = 30
+MAX_BUDGET_USD = 2.00
 
 
 async def run_benchmarker(model_name: str, model_file: str) -> dict:
@@ -51,7 +51,6 @@ async def run_benchmarker(model_name: str, model_file: str) -> dict:
             system_prompt=system_prompt,
             allowed_tools=ALLOWED_TOOLS,
             permission_mode=PERMISSION_MODE,
-            allow_dangerously_skip_permissions=True,
             max_turns=MAX_TURNS,
             max_budget_usd=MAX_BUDGET_USD,
         ),
