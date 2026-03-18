@@ -6,3 +6,4 @@ scout_output.json
 hypothesis.json
 results/*.json
 .claude/
+venv
