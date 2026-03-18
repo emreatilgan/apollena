@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage, SystemMessage
+from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 
 # --- Constants ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -67,9 +67,8 @@ async def run_scout(domain: str) -> dict:
             max_budget_usd=MAX_BUDGET_USD,
         ),
     ):
-        if isinstance(message, SystemMessage) and message.subtype == "init":
+        if isinstance(message, ResultMessage):
             session_id = message.session_id
-        elif isinstance(message, ResultMessage):
             result_text = message.result
 
     # Read the output file the agent should have written

@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage, SystemMessage
+from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 
 # --- Constants ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -63,12 +63,11 @@ async def run_theorist(scout_output: dict) -> dict:
             max_turns=MAX_TURNS,
             max_budget_usd=MAX_BUDGET_USD,
             thinking={"type": "adaptive"},
-            output_config={"effort": "max"},
+            effort="max",
         ),
     ):
-        if isinstance(message, SystemMessage) and message.subtype == "init":
+        if isinstance(message, ResultMessage):
             session_id = message.session_id
-        elif isinstance(message, ResultMessage):
             result_text = message.result
 
     output = json.loads(OUTPUT_FILE.read_text()) if OUTPUT_FILE.exists() else None
