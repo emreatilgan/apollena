@@ -1,9 +1,22 @@
 """Literature Scout Agent — searches non-ML scientific domains for CTR-relevant mechanisms."""
 
 import json
+import logging
 from pathlib import Path
 
-from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
+from claude_agent_sdk import (
+    query,
+    ClaudeAgentOptions,
+    AssistantMessage,
+    ResultMessage,
+    SystemMessage,
+    UserMessage,
+    TextBlock,
+    ToolUseBlock,
+    ToolResultBlock,
+)
+
+log = logging.getLogger("scout")
 
 # --- Constants ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -56,6 +69,7 @@ async def run_scout(domain: str) -> dict:
     session_id = None
     result_text = None
 
+    turn = 0
     async for message in query(
         prompt=task_prompt,
         options=ClaudeAgentOptions(
@@ -67,9 +81,33 @@ async def run_scout(domain: str) -> dict:
             max_budget_usd=MAX_BUDGET_USD,
         ),
     ):
-        if isinstance(message, ResultMessage):
+        if isinstance(message, AssistantMessage):
+            turn += 1
+            for block in message.content:
+                if isinstance(block, TextBlock):
+                    preview = block.text[:200].replace("\n", " ")
+                    log.info(f"[turn {turn}] Assistant text: {preview}")
+                elif isinstance(block, ToolUseBlock):
+                    input_preview = json.dumps(block.input, ensure_ascii=False)[:300]
+                    log.info(f"[turn {turn}] Tool call: {block.name} | input: {input_preview}")
+        elif isinstance(message, UserMessage):
+            if isinstance(message.content, list):
+                for block in message.content:
+                    if isinstance(block, ToolResultBlock):
+                        content_str = str(block.content or "")[:300].replace("\n", " ")
+                        is_err = " (ERROR)" if block.is_error else ""
+                        log.info(f"[turn {turn}] Tool result{is_err}: {content_str}")
+            elif isinstance(message.content, str) and message.content:
+                log.info(f"[turn {turn}] User message: {message.content[:200]}")
+        elif isinstance(message, SystemMessage):
+            log.info(f"[turn {turn}] System ({message.subtype}): {json.dumps(message.data, default=str)[:200]}")
+        elif isinstance(message, ResultMessage):
             session_id = message.session_id
             result_text = message.result
+            log.info(
+                f"Agent finished: turns={message.num_turns}, cost=${message.total_cost_usd:.3f}, "
+                f"stop_reason={message.stop_reason}, is_error={message.is_error}"
+            )
 
     # Read the output file the agent should have written
     output = json.loads(OUTPUT_FILE.read_text()) if OUTPUT_FILE.exists() else None
