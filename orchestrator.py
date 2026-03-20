@@ -273,10 +273,15 @@ def _print_final_report(sessions: dict) -> None:
         log.info(f"  AUC: {auc}")
         log.info(f"  Logloss: {logloss}")
 
-        if auc and auc > 0.8137:
-            log.info("  >>> NEW #1 ON BARS LEADERBOARD! <<<")
-        elif auc and auc > 0.8100:
-            log.info("  >>> Top-10 candidate on BARS leaderboard")
+        dataset = result.get("dataset", "unknown")
+        log.info(f"  Dataset: {dataset}")
+        if dataset == "Frappe_x1" and auc and auc > 0.98:
+            log.info("  >>> Excellent result on Frappe_x1! <<<")
+        elif dataset == "Criteo_x1":
+            if auc and auc > 0.8137:
+                log.info("  >>> NEW #1 ON BARS Criteo_x1 LEADERBOARD! <<<")
+            elif auc and auc > 0.8100:
+                log.info("  >>> Top-10 candidate on BARS Criteo_x1 leaderboard")
 
 
 def main():

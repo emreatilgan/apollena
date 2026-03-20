@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This system autonomously discovers, implements, and benchmarks novel CTR prediction algorithms by borrowing mechanisms from non-ML scientific domains. It targets the BARS / Criteo_x1 AUC leaderboard. No human intervention is required at any pipeline stage.
+This system autonomously discovers, implements, and benchmarks novel CTR prediction algorithms by borrowing mechanisms from non-ML scientific domains. It benchmarks on the BARS Frappe_x1 dataset (CPU-friendly, ~288K samples). Criteo_x1 is available for full-scale GPU runs. No human intervention is required at any pipeline stage.
 
 Reference: `architecture.docx` (v0.1, March 2026).
 
@@ -151,9 +151,9 @@ Default domain for first run: `statistical_physics`.
 
 ## Success Criteria
 
-- **Primary (required):** Produces a valid FuxiCTR model class with a finite, valid AUC on Criteo_x1 — fully autonomously
-- **Secondary (publishable):** Top-10 AUC on BARS Criteo_x1 leaderboard
-- **Stretch (fundable):** Beats current #1 AUC (0.8137 as of v0.1)
+- **Primary (required):** Produces a valid FuxiCTR model class with a finite, valid AUC on Frappe_x1 — fully autonomously
+- **Secondary (publishable):** AUC > 0.98 on Frappe_x1 (competitive with BARS leaderboard models)
+- **Stretch (fundable):** Run on Criteo_x1 (GPU) and beat current #1 AUC (0.8137 as of v0.1)
 - **Negative result:** A documented failed attempt (mechanism found → implemented → AUC below baseline) is still publishable
 
 ---

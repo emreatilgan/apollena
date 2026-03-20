@@ -1,4 +1,4 @@
-"""Benchmarker Agent — runs Criteo_x1 benchmark on implemented model."""
+"""Benchmarker Agent — runs Frappe_x1 benchmark on implemented model."""
 
 import json
 import logging
@@ -38,14 +38,14 @@ async def run_benchmarker(model_name: str, model_file: str) -> dict:
     system_prompt = PROMPT_FILE.read_text().replace("{{FUXICTR_PATH}}", FUXICTR_PATH)
 
     task_prompt = (
-        f"Benchmark the following model on Criteo_x1:\n\n"
+        f"Benchmark the following model on Frappe_x1:\n\n"
         f"**Model Name**: {model_name}\n"
         f"**Model File**: `{model_file}`\n"
         f"**FuxiCTR Path**: `{FUXICTR_PATH}`\n"
         f"**Configs Directory**: `{CONFIGS_DIR}`\n"
         f"**Results Output**: `{OUTPUT_FILE}`\n\n"
-        f"Use standard Criteo_x1 hyperparameters:\n"
-        f"- Embedding dim: 16\n"
+        f"Use standard Frappe_x1 hyperparameters:\n"
+        f"- Embedding dim: 10\n"
         f"- Learning rate: 1e-3\n"
         f"- Batch size: 4096\n"
         f"- Epochs: 10\n"
