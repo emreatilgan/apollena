@@ -12,8 +12,10 @@ Given a model name and its file path, run a full training and evaluation cycle o
    - Embedding dim: 10
    - Learning rate: 1e-3
    - Batch size: 4096
-   - Epochs: 10
-   - Early stopping patience: 2
+   - Epochs: 100
+   - Early stopping patience: 5
+   - Net dropout: 0.2
+   - Embedding regularizer: 1e-5
    - Optimizer: Adam
    If the expid does not exist, create it.
 3. **Verify dataset config**: Ensure `Frappe_x1` is defined in `{{FUXICTR_PATH}}/model_zoo/{ModelName}/{ModelName}_torch/config/dataset_config.yaml` with:

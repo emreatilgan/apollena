@@ -48,8 +48,10 @@ async def run_benchmarker(model_name: str, model_file: str) -> dict:
         f"- Embedding dim: 10\n"
         f"- Learning rate: 1e-3\n"
         f"- Batch size: 4096\n"
-        f"- Epochs: 10\n"
-        f"- Early stopping patience: 2\n"
+        f"- Epochs: 100\n"
+        f"- Early stopping patience: 5\n"
+        f"- Net dropout: 0.2\n"
+        f"- Embedding regularizer: 1e-5\n"
         f"- Optimizer: Adam\n\n"
         f"Follow the instructions in your system prompt exactly."
     )
