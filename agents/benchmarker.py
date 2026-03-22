@@ -1,4 +1,4 @@
-"""Benchmarker Agent — runs Frappe_x1 benchmark on implemented model."""
+"""Benchmarker Agent — tunes and benchmarks model on Frappe_x1."""
 
 import json
 import logging
@@ -29,8 +29,8 @@ FUXICTR_PATH = str(Path.home() / "Projects" / "FuxiCTR")
 
 ALLOWED_TOOLS = ["Read", "Write", "Edit", "Bash"]
 PERMISSION_MODE = "bypassPermissions"
-MAX_TURNS = 30
-MAX_BUDGET_USD = 2.00
+MAX_TURNS = 50
+MAX_BUDGET_USD = 3.00
 
 
 async def run_benchmarker(model_name: str, model_file: str) -> dict:
@@ -38,22 +38,14 @@ async def run_benchmarker(model_name: str, model_file: str) -> dict:
     system_prompt = PROMPT_FILE.read_text().replace("{{FUXICTR_PATH}}", FUXICTR_PATH)
 
     task_prompt = (
-        f"Benchmark the following model on Frappe_x1:\n\n"
+        f"Tune and benchmark the following model on Frappe_x1:\n\n"
         f"**Model Name**: {model_name}\n"
         f"**Model File**: `{model_file}`\n"
         f"**FuxiCTR Path**: `{FUXICTR_PATH}`\n"
-        f"**Configs Directory**: `{CONFIGS_DIR}`\n"
+        f"**Tuner Entry Point**: `{FUXICTR_PATH}/experiment/run_param_tuner.py`\n"
         f"**Results Output**: `{OUTPUT_FILE}`\n\n"
-        f"Use standard Frappe_x1 hyperparameters:\n"
-        f"- Embedding dim: 10\n"
-        f"- Learning rate: 1e-3\n"
-        f"- Batch size: 4096\n"
-        f"- Epochs: 100\n"
-        f"- Early stopping patience: 5\n"
-        f"- Net dropout: 0.2\n"
-        f"- Embedding regularizer: 1e-5\n"
-        f"- Optimizer: Adam\n\n"
-        f"Follow the instructions in your system prompt exactly."
+        f"Follow the instructions in your system prompt exactly.\n"
+        f"Use FuxiCTR's param tuner to search over hyperparameters, then report the best result."
     )
 
     session_id = None

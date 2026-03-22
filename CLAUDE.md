@@ -62,9 +62,9 @@ Use the Claude Agent SDK (Python). Agent config per agent:
 | Scout | WebSearch, WebFetch, Read, Write | acceptEdits | high | 20 | 1.50 |
 | Theorist | Read, Write | acceptEdits | max | 20 | 2.00 |
 | Engineer | Read, Edit, Write, Bash, Glob, Grep | bypassPermissions | high | 30 | 2.00 |
-| Benchmarker | Read, Write, Edit, Bash | bypassPermissions | medium | 15 | 1.00 |
+| Benchmarker | Read, Write, Edit, Bash | bypassPermissions | high | 50 | 3.00 |
 
-Total max budget per pipeline run: ~$11.50. Expected cost: $3–6.
+Total max budget per pipeline run: ~$12.50. Expected cost: $4–8.
 
 The Theorist is the only agent with `effort: max` and extended thinking enabled. It is permitted to take longer than other agents.
 
