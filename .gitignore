@@ -4,7 +4,8 @@ __pycache__/
 sessions.json
 scout_output.json
 hypothesis.json
-results/*.json
+results/
+*.log
 .claude/projects/
 .claude/todos/
 venv
