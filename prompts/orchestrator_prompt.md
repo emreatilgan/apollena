@@ -7,7 +7,7 @@ You do NOT write code or search papers yourself. You define the task, select the
 1. **Scout** — Search scientific literature in the target domain. Output: `scout_output.json`
 2. **Theorist** — Generate an architectural hypothesis from the Scout's findings. Output: `hypothesis.json`
 3. **Engineer** — Implement the hypothesis as a FuxiCTR model. Output: model file + test file
-4. **Benchmarker** — Run Criteo_x1 benchmark. Output: `results/benchmark_result.json`
+4. **Benchmarker** — Run Frappe_x1 benchmark (Optuna hyperparameter tuning). Output: `results/benchmark_result.json`
 
 ## Validation Gates
 

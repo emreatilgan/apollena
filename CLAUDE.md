@@ -40,33 +40,32 @@ FuxiCTR workspace lives at `~/Projects/FuxiCTR/` (outside this repo).
 
 ## Agent Architecture
 
-Five agents. The Orchestrator coordinates; the four subagents do the work. Each subagent runs in an isolated context window — only its final JSON result is passed back.
+Four LLM subagents do the work, coordinated by the Orchestrator — a **deterministic Python script**, not itself an LLM/SDK agent. Each subagent runs in an isolated context window (a separate SDK `query()` call) — only its final JSON result is passed back.
 
 | Agent | File | Role |
 |---|---|---|
-| Orchestrator | `orchestrator.py` | Pipeline coordinator, spawns subagents via `Task` tool |
+| Orchestrator | `orchestrator.py` | Pipeline coordinator — plain Python; runs each subagent in-process via the SDK `query()` (no `Task` tool) |
 | Scout | `agents/scout.py` | Literature search across target domain |
 | Theorist | `agents/theorist.py` | Maps domain mechanism → architectural hypothesis |
 | Engineer | `agents/engineer.py` | Implements FuxiCTR model class, runs tests |
-| Benchmarker | `agents/benchmarker.py` | Runs Criteo_x1 training, captures AUC/logloss |
+| Benchmarker | `agents/benchmarker.py` | Runs Frappe_x1 Optuna tuning, captures AUC/logloss |
 
 ---
 
 ## Claude Agent SDK Configuration
 
-Use the Claude Agent SDK (Python). Agent config per agent:
+Use the Claude Agent SDK (Python). The Orchestrator is a deterministic Python script (no SDK agent config). Config per **subagent**:
 
 | Agent | allowed_tools | permission_mode | effort | max_turns | max_budget_usd |
 |---|---|---|---|---|---|
-| Orchestrator | Task, Read, Write, TodoWrite | acceptEdits | high | 50 | 5.00 |
-| Scout | WebSearch, WebFetch, Read, Write | acceptEdits | high | 20 | 1.50 |
+| Scout | WebSearch, WebFetch, Read, Write | acceptEdits | default | 20 | 1.50 |
 | Theorist | Read, Write | acceptEdits | max | 20 | 2.00 |
-| Engineer | Read, Edit, Write, Bash, Glob, Grep | bypassPermissions | high | 30 | 2.00 |
-| Benchmarker | Read, Write, Edit, Bash | bypassPermissions | high | 50 | 3.00 |
+| Engineer | Read, Edit, Write, Bash, Glob, Grep | bypassPermissions | default | 30 | 2.00 |
+| Benchmarker | Read, Write, Edit, Bash | bypassPermissions | default | 50 | 3.00 |
 
-Total max budget per pipeline run: ~$12.50. Expected cost: $4–8.
+Total max budget per pipeline run: ~$8.50 (sum of the four subagents; the Orchestrator is plain Python and carries no agent budget). Expected cost: $4–8.
 
-The Theorist is the only agent with `effort: max` and extended thinking enabled. It is permitted to take longer than other agents.
+The Theorist is the only agent that sets `effort` (`max`) and enables extended thinking (`thinking={"type": "adaptive"}`); the other three use the SDK default effort. The Theorist is permitted to take longer than other agents.
 
 ---
 
@@ -115,13 +114,13 @@ The Orchestrator writes `session_id` for each subagent run to `sessions.json`. O
 
 When the Engineer implements a new model:
 
-1. Read an existing BARS model as a structural template (e.g. `fuxictr/models/DeepFM.py`)
-2. Subclass `BaseModel`; implement `__init__()` and `forward()`
+1. Read an existing BARS model as a structural template (e.g. `model_zoo/DeepFM/DeepFM_torch/src/DeepFM.py`)
+2. Subclass `BaseModel` from `fuxictr.pytorch.models`; implement `__init__()` and `forward()`
 3. Use standard FuxiCTR constructor parameters — do not invent new ones
-4. Register the new class in `fuxictr/models/__init__.py`
-5. New layer goes in `fuxictr/layers/` if it's reusable; inline otherwise
-6. Test file: `tests/test_{ModelName}.py` — must test forward pass shape, finite loss, no NaN gradients
-7. Test command: `cd ~/Projects/FuxiCTR && python -m pytest tests/test_{ModelName}.py`
+4. Create a model-zoo entry under `model_zoo/{ModelName}/{ModelName}_torch/` (with `src/{ModelName}.py`, `src/__init__.py`, `config/`, `run_expid.py`, `fuxictr_version.py`) — the model is registered via its model-zoo `src/`, not a global `fuxictr/.../__init__.py`
+5. New layer goes in `fuxictr/pytorch/layers/` if it's reusable; inline otherwise
+6. Test file: `tests/unit_tests/test_{ModelName}.py` — must test forward pass shape, finite loss, no NaN gradients
+7. Test command: `cd ~/Projects/FuxiCTR && python -m pytest tests/unit_tests/test_{ModelName}.py`
 8. On test failure: read error, patch, re-run — loop up to 10 times before escalating to Orchestrator
 
 ---
@@ -164,17 +163,9 @@ Default domain for first run: `statistical_physics`.
 - Package manager: `pip` with `requirements.txt`
 - Agent SDK: `claude-agent-sdk` (Python)
 - All agent configs defined in the agent files themselves, not hardcoded in `orchestrator.py`
-- Prompts live in `prompts/` as markdown files — load them at runtime, do not inline long strings
+- Prompts live in `prompts/` as markdown files — load them at runtime, do not inline long strings. (The four subagent prompts are loaded; `orchestrator_prompt.md` is descriptive only — `orchestrator.py` is plain Python and does not load it.)
 - All inter-agent data is JSON; use `json.dumps(indent=2)` for readability
 - No external databases — file system only for state
-
----
-
-## gstack
-
-Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools directly.
-
-Available gstack skills: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/design-shotgun`, `/design-html`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/connect-chrome`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/setup-gbrain`, `/retro`, `/investigate`, `/document-release`, `/document-generate`, `/codex`, `/cso`, `/autoplan`, `/plan-devex-review`, `/devex-review`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`, `/learn`.
 
 ---
 
@@ -186,57 +177,3 @@ Available gstack skills: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`
 - Do not implement a hypothesis that is already in BARS
 - Do not hardcode file paths — use constants defined at the top of each agent file
 - Do not skip the validation gates even if the output looks correct
-
-## Skill routing
-
-When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
-
-Key routing rules:
-- Product ideas/brainstorming → invoke /office-hours
-- Strategy/scope → invoke /plan-ceo-review
-- Architecture → invoke /plan-eng-review
-- Design system/plan review → invoke /design-consultation or /plan-design-review
-- Full review pipeline → invoke /autoplan
-- Bugs/errors → invoke /investigate
-- QA/testing site behavior → invoke /qa or /qa-only
-- Code review/diff check → invoke /review
-- Visual polish → invoke /design-review
-- Ship/deploy/PR → invoke /ship or /land-and-deploy
-- Save progress → invoke /context-save
-- Resume context → invoke /context-restore
-- Author a backlog-ready spec/issue → invoke /spec
-
-## GBrain Configuration (configured by /setup-gbrain)
-- Mode: local-stdio
-- Engine: pglite
-- Config file: ~/.gbrain/config.json (mode 0600)
-- Setup date: 2026-05-28
-- MCP registered: yes (user scope, /Users/emreatilgan/.bun/bin/gbrain serve)
-- Artifacts sync: off
-- Current repo policy: n/a (no origin remote)
-
-## GBrain Search Guidance (configured by /sync-gbrain)
-<!-- gstack-gbrain-search-guidance:start -->
-
-GBrain is set up and synced on this machine. The agent should prefer gbrain
-over Grep when the question is semantic or when you don't know the exact
-identifier yet. Two indexed corpora available via the `gbrain` CLI:
-- This repo's code (registered as `gstack-code-<repo>` source).
-- `~/.gstack/` curated memory (registered as `gstack-brain-<user>` source via
-  the existing federation pipeline).
-
-Prefer gbrain when:
-- "Where is X handled?" / semantic intent, no exact string yet:
-    `gbrain search "<terms>"` or `gbrain query "<question>"`
-- "Where is symbol Y defined?" / symbol-based code questions:
-    `gbrain code-def <symbol>` or `gbrain code-refs <symbol>`
-- "What calls Y?" / "What does Y depend on?":
-    `gbrain code-callers <symbol>` / `gbrain code-callees <symbol>`
-- "What did we decide last time?" / past plans, retros, learnings:
-    `gbrain search "<terms>" --source gstack-brain-<user>`
-
-Grep is still right for known exact strings, regex, multiline patterns, and
-file globs. The brain auto-syncs incrementally on every gstack skill start.
-Run `/sync-gbrain` to force-refresh, `/sync-gbrain --full` for full reindex.
-
-<!-- gstack-gbrain-search-guidance:end -->
