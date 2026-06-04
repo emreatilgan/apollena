@@ -42,7 +42,7 @@ async def run_benchmarker(model_name: str, model_file: str) -> dict:
         f"**Model Name**: {model_name}\n"
         f"**Model File**: `{model_file}`\n"
         f"**FuxiCTR Path**: `{FUXICTR_PATH}`\n"
-        f"**Tuner Entry Point**: `{FUXICTR_PATH}/experiment/run_param_tuner.py`\n"
+        f"**Tuner Entry Point**: `{FUXICTR_PATH}/experiment/run_optuna_tuner.py`\n"
         f"**Results Output**: `{OUTPUT_FILE}`\n\n"
         f"Follow the instructions in your system prompt exactly.\n"
         f"Use FuxiCTR's param tuner to search over hyperparameters, then report the best result."

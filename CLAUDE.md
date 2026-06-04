@@ -27,11 +27,17 @@ apollena/
 │   └── benchmarker_prompt.md
 ├── schemas/                     # Input/output JSON schemas per agent
 ├── configs/                     # FuxiCTR experiment YAML configs
-├── results/                     # Benchmark output JSONs (gitignored if large)
-├── sessions.json                # Session resume tracking (written by Orchestrator)
-├── scout_output.json            # Scout stage output
-├── hypothesis.json              # Theorist stage output
+├── infra/                       # GCP VM provisioning + tuning scripts
 └── requirements.txt
+
+# Runtime artifacts — generated per run, gitignored, NOT committed.
+# A clean checkout contains NONE of these. Their absence is EXPECTED and
+# does not mean the pipeline hasn't run — they are scratch output, deleted
+# routinely between runs (and after GCP VM runs). Do not treat them as source.
+#   scout_output.json             # Scout stage output
+#   hypothesis.json               # Theorist stage output
+#   sessions.json                 # Orchestrator session / resume state
+#   results/benchmark_result.json # Benchmarker stage output
 ```
 
 FuxiCTR workspace lives at `~/Projects/FuxiCTR/` (outside this repo).

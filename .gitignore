@@ -1,10 +1,13 @@
 __pycache__/
 *.pyc
 .env
-sessions.json
-scout_output.json
-hypothesis.json
-results/
+# Runtime artifacts — root-level only. Leading slash anchors each rule to the
+# repo root so it does NOT shadow same-named source files (e.g. the Scout output
+# schema at schemas/scout_output.json).
+/sessions.json
+/scout_output.json
+/hypothesis.json
+/results/
 *.log
 .claude/projects/
 .claude/todos/
