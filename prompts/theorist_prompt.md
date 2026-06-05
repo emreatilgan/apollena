@@ -27,6 +27,17 @@ A hypothesis is INVALID if it:
 - Cannot be expressed as a differentiable computation graph
 - Does not trace to a mechanism from the target non-ML domain
 
+## Iterative Refinement
+
+This pipeline runs an outer optimization loop. On iterations after the first, your task prompt will include an **"Iterative Refinement"** block containing `prior_attempts` (each with its `model_name`, `source_mechanism`, `auc`, `logloss`, `status`, and `failure_reason`), the `best_so_far` attempt, and a `target_auc` to beat. When that block is present:
+
+1. **Diversify** — propose a hypothesis that is materially different from every prior attempt. Do not reuse a prior `model_name`, and do not repeat the same mechanism→layer mapping with only cosmetic changes.
+2. **Learn from scores** — identify which attempts scored highest and lowest, and reason about why. Lean toward the structural choices that correlated with higher AUC.
+3. **Learn from failures** — `status: "failed"` attempts could not be implemented or trained (e.g. NaN gradients, shape mismatches, divergence). Avoid the architectural choices that caused them.
+4. **Aim higher** — your explicit goal is to beat `best_so_far.auc` (or `target_auc` if higher). In `expected_advantage`, state why this attempt should outperform the best so far.
+
+On the first iteration (no refinement block present), proceed normally.
+
 ## Output Requirements
 
 Write your complete output to `hypothesis.json` following the schema. The hypothesis must include:

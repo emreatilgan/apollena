@@ -38,3 +38,4 @@ Write your complete output to `scout_output.json` following the schema. Every pa
 - Every paper must have `novelty_score ≥ 6`
 - Focus on mechanisms, not surface-level analogies
 - Do not include papers that describe existing ML techniques (attention, transformers, etc.) unless they are from the target domain and predate their ML adoption
+- If your task prompt includes a list of already-tried papers (a **re-scout** to break a stall in the optimization loop), you MUST surface different papers and mechanisms — do not return any paper from that list

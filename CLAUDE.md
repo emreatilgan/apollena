@@ -34,10 +34,11 @@ apollena/
 # A clean checkout contains NONE of these. Their absence is EXPECTED and
 # does not mean the pipeline hasn't run — they are scratch output, deleted
 # routinely between runs (and after GCP VM runs). Do not treat them as source.
-#   scout_output.json             # Scout stage output
-#   hypothesis.json               # Theorist stage output
-#   sessions.json                 # Orchestrator session / resume state
-#   results/benchmark_result.json # Benchmarker stage output
+#   scout_output.json             # Scout stage output (latest scout)
+#   hypothesis.json               # Theorist stage output (current iteration)
+#   sessions.json                 # Orchestrator session / resume state (outer loop)
+#   results/benchmark_result.json # Benchmarker stage output (latest run)
+#   runs/<run_id>/iter_<NNN>/     # Per-iteration archive (hypothesis + result snapshots)
 ```
 
 FuxiCTR workspace lives at `~/Projects/FuxiCTR/` (outside this repo).
@@ -69,7 +70,7 @@ Use the Claude Agent SDK (Python). The Orchestrator is a deterministic Python sc
 | Engineer | Read, Edit, Write, Bash, Glob, Grep | bypassPermissions | default | 30 | 2.00 |
 | Benchmarker | Read, Write, Edit, Bash | bypassPermissions | default | 50 | 3.00 |
 
-Total max budget per pipeline run: ~$8.50 (sum of the four subagents; the Orchestrator is plain Python and carries no agent budget). Expected cost: $4–8.
+Total max budget per **single pass** (Scout once + one Theorist→Engineer→Benchmarker iteration): ~$8.50 (sum of the four subagents; the Orchestrator is plain Python and carries no agent budget). Expected single-pass cost: $4–8. The outer optimization loop repeats Theorist→Engineer→Benchmarker (~$5–7/iteration), so a default `--max-iterations 3` run costs ~$15–21 worst case; `--max-budget-usd` caps cumulative spend.
 
 The Theorist is the only agent that sets `effort` (`max`) and enables extended thinking (`thinking={"type": "adaptive"}`); the other three use the SDK default effort. The Theorist is permitted to take longer than other agents.
 
@@ -88,6 +89,12 @@ Agents run sequentially. Each stage must pass a validation gate before the next 
 
 If a validation gate fails, the Orchestrator re-spawns the same agent with corrected instructions. It does not restart the full pipeline.
 
+### Outer Optimization Loop
+
+Scout runs **once** to seed the literature. Stages 2–4 (Theorist → Engineer → Benchmarker) are then wrapped in an outer optimization loop: each iteration's benchmark result is fed back to the next Theorist call (as a compact `attempt_history` of prior `model_name`/`AUC`/`status`/`failure_reason` records plus the `best_so_far`), so hypotheses improve across iterations. A new hypothesis must be **distinct** from prior attempts — the Orchestrator rejects a repeated `model_name` on top of the BARS novelty check.
+
+The loop stops on the first of: best AUC ≥ `--target-auc` (default 0.98); cumulative spend ≥ `--max-budget-usd` (optional); `--max-iterations` reached (default 3); or `--patience` consecutive no-improvement iterations (default 2). When the search stalls (`--rescout-after` no-improvement iterations, default 1), Scout is re-run for **fresh** papers before the next hypothesis. A stage that fails after `MAX_RETRIES_PER_STAGE` abandons only the current iteration (the failure is fed back to the Theorist), not the whole loop; only a Scout-bootstrap failure is fatal. `--max-iterations 1` reproduces the original single-pass behavior.
+
 ---
 
 ## File-Based Handoff Protocol
@@ -98,19 +105,32 @@ Each agent writes its complete output to disk as a JSON file before returning. T
 
 ## Session Resume Protocol
 
-The Orchestrator writes `session_id` for each subagent run to `sessions.json`. On interruption (error_max_turns, error_max_budget_usd, API failure), resume from the last successful stage checkpoint — do not restart the full pipeline.
+The Orchestrator writes `session_id` for each subagent run to `sessions.json`. On interruption (error_max_turns, error_max_budget_usd, API failure), resume with `--resume` from the last checkpoint — do not restart the full pipeline. Resume keeps the stored `config`. Resume granularity is per-stage *within* the active iteration: a completed stage is skipped, an interrupted iteration continues from its first pending stage, and a finished iteration advances the loop (re-evaluating the stopping conditions).
 
 ```json
-// sessions.json structure
+// sessions.json structure (outer loop)
 {
   "run_id": "...",
   "domain": "statistical_physics",
-  "stages": {
-    "scout": { "session_id": "...", "status": "completed", "output": "scout_output.json" },
-    "theorist": { "session_id": "...", "status": "in_progress" },
-    "engineer": { "status": "pending" },
-    "benchmarker": { "status": "pending" }
-  }
+  "config": { "max_iterations": 3, "target_auc": 0.98, "patience": 2, "rescout_after": 1, "max_budget_usd": null },
+  "total_cost_usd": 12.4,
+  "scout": { "session_id": "...", "status": "completed", "output": "scout_output.json", "runs": 1 },
+  "iterations": [
+    {
+      "index": 0,
+      "rescouted": false,
+      "stages": {
+        "theorist":    { "session_id": "...", "status": "completed", "output": "runs/<run_id>/iter_000/hypothesis.json" },
+        "engineer":    { "session_id": "...", "status": "completed", "output": { "model_name": "...", "model_file": "...", "test_passed": true } },
+        "benchmarker": { "session_id": "...", "status": "completed", "output": "runs/<run_id>/iter_000/benchmark_result.json" }
+      },
+      "result":  { "model_name": "...", "auc": 0.971, "logloss": 0.18, "status": "completed", "failure_reason": null },
+      "attempt": { "iteration": 0, "model_name": "...", "source_mechanism": "...", "auc": 0.971, "status": "completed" }
+    }
+  ],
+  "best": { "iteration": 0, "model_name": "...", "auc": 0.971, "hypothesis_file": "...", "result_file": "..." },
+  "stall": 0,
+  "stop_reason": null
 }
 ```
 
