@@ -53,8 +53,13 @@ DOMAIN_KEYWORDS = {
 }
 
 
-async def run_scout(domain: str) -> dict:
-    """Run the Scout agent for the given domain. Returns the parsed output dict."""
+async def run_scout(domain: str, avoid_titles: list[str] | None = None) -> dict:
+    """Run the Scout agent for the given domain. Returns the parsed output dict.
+
+    If ``avoid_titles`` is provided (a re-scout triggered to break a stall in the
+    outer optimization loop), the agent is asked to surface papers different from
+    those already tried.
+    """
     system_prompt = PROMPT_FILE.read_text()
     keywords = DOMAIN_KEYWORDS.get(domain, [])
 
@@ -66,8 +71,17 @@ async def run_scout(domain: str) -> dict:
         f"Follow the instructions in your system prompt exactly."
     )
 
+    if avoid_titles:
+        task_prompt += (
+            f"\n\n**This is a RE-SCOUT to break a stall.** Hypotheses derived from the "
+            f"papers below did not improve the benchmark. Surface DIFFERENT papers and "
+            f"mechanisms — do not return any of these already-tried papers:\n"
+            f"{json.dumps(avoid_titles, indent=2)}"
+        )
+
     session_id = None
     result_text = None
+    cost_usd = 0.0
 
     turn = 0
     async for message in query(
@@ -104,6 +118,7 @@ async def run_scout(domain: str) -> dict:
         elif isinstance(message, ResultMessage):
             session_id = message.session_id
             result_text = message.result
+            cost_usd = message.total_cost_usd or 0.0
             log.info(
                 f"Agent finished: turns={message.num_turns}, cost=${message.total_cost_usd:.3f}, "
                 f"stop_reason={message.stop_reason}, is_error={message.is_error}"
@@ -111,7 +126,7 @@ async def run_scout(domain: str) -> dict:
 
     # Read the output file the agent should have written
     output = json.loads(OUTPUT_FILE.read_text()) if OUTPUT_FILE.exists() else None
-    return {"session_id": session_id, "result": result_text, "output": output}
+    return {"session_id": session_id, "result": result_text, "output": output, "cost_usd": cost_usd}
 
 
 def validate_scout_output(output: dict) -> tuple[bool, str]:

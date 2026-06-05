@@ -55,6 +55,7 @@ async def run_engineer(hypothesis: dict) -> dict:
 
     session_id = None
     result_text = None
+    cost_usd = 0.0
 
     turn = 0
     async for message in query(
@@ -91,6 +92,7 @@ async def run_engineer(hypothesis: dict) -> dict:
         elif isinstance(message, ResultMessage):
             session_id = message.session_id
             result_text = message.result
+            cost_usd = message.total_cost_usd or 0.0
             log.info(
                 f"Agent finished: turns={message.num_turns}, cost=${message.total_cost_usd:.3f}, "
                 f"stop_reason={message.stop_reason}, is_error={message.is_error}"
@@ -98,7 +100,7 @@ async def run_engineer(hypothesis: dict) -> dict:
 
     # Try to parse structured output from the result
     output = _parse_engineer_result(model_name, result_text)
-    return {"session_id": session_id, "result": result_text, "output": output}
+    return {"session_id": session_id, "result": result_text, "output": output, "cost_usd": cost_usd}
 
 
 def _parse_engineer_result(model_name: str, result_text: str | None) -> dict:

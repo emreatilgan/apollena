@@ -46,8 +46,20 @@ BARS_MODEL_LIST = [
 ]
 
 
-async def run_theorist(scout_output: dict) -> dict:
-    """Run the Theorist agent with the Scout's findings. Returns the parsed output dict."""
+async def run_theorist(
+    scout_output: dict,
+    attempt_history: list[dict] | None = None,
+    best_so_far: dict | None = None,
+    target_auc: float | None = None,
+) -> dict:
+    """Run the Theorist agent with the Scout's findings. Returns the parsed output dict.
+
+    In the outer optimization loop, ``attempt_history`` carries compact records of
+    prior hypotheses and their benchmark results, ``best_so_far`` is the best
+    attempt to date, and ``target_auc`` is the AUC to beat. When provided, these
+    steer the Theorist to propose a materially different, hopefully better model.
+    All three default to ``None`` for the first iteration (behaves as before).
+    """
     system_prompt = PROMPT_FILE.read_text()
 
     # Build context for the Theorist: papers + BARS model list
@@ -65,8 +77,30 @@ async def run_theorist(scout_output: dict) -> dict:
         f"Follow the instructions in your system prompt exactly. Think deeply — you have extended thinking enabled."
     )
 
+    if attempt_history:
+        best_auc = best_so_far.get("auc") if best_so_far else None
+        feedback = {
+            "prior_attempts": attempt_history,
+            "best_so_far": best_so_far,
+            "target_auc": target_auc,
+        }
+        task_prompt += (
+            f"\n\n## Iterative Refinement (iteration {len(attempt_history) + 1})\n\n"
+            f"Previous hypotheses have already been implemented and benchmarked on Frappe_x1. "
+            f"Use these results to propose a BETTER, MATERIALLY DIFFERENT hypothesis:\n\n"
+            f"```json\n{json.dumps(feedback, indent=2, default=str)}\n```\n\n"
+            f"Requirements for this iteration:\n"
+            f"- Do NOT reuse any prior `model_name` or repeat the same mechanism→layer mapping.\n"
+            f"- Analyze which attempts scored highest/lowest and WHY; learn from failures "
+            f"(`status: failed` entries could not be implemented or trained — avoid their pitfalls).\n"
+            f"- Explicitly aim to beat the best AUC so far"
+            + (f" ({best_auc})" if best_auc is not None else "")
+            + ".\n"
+        )
+
     session_id = None
     result_text = None
+    cost_usd = 0.0
 
     turn = 0
     async for message in query(
@@ -108,13 +142,14 @@ async def run_theorist(scout_output: dict) -> dict:
         elif isinstance(message, ResultMessage):
             session_id = message.session_id
             result_text = message.result
+            cost_usd = message.total_cost_usd or 0.0
             log.info(
                 f"Agent finished: turns={message.num_turns}, cost=${message.total_cost_usd:.3f}, "
                 f"stop_reason={message.stop_reason}, is_error={message.is_error}"
             )
 
     output = json.loads(OUTPUT_FILE.read_text()) if OUTPUT_FILE.exists() else None
-    return {"session_id": session_id, "result": result_text, "output": output}
+    return {"session_id": session_id, "result": result_text, "output": output, "cost_usd": cost_usd}
 
 
 def validate_theorist_output(output: dict) -> tuple[bool, str]:
