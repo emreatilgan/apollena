@@ -13,4 +13,5 @@ __pycache__/
 *.log
 .claude/projects/
 .claude/todos/
+.claude/settings.local.json
 venv
